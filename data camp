@@ -173,4 +173,65 @@ acc_logit <- sum(diag(tab_class_logit)) / nrow(test_set)
 acc_probit <- sum(diag(tab_class_probit))/nrow(test_set)
 acc_cloglog <- sum(diag(tab_class_cloglog))/nrow(test_set)
 
+
+# Load package rpart in your workspace.
+library("rpart")
+
+# Change the code provided in the video such that a decision tree is constructed using the undersampled training set. Include rpart.control to relax the complexity parameter to 0.001.
+tree_undersample <- rpart(loan_status ~ ., method = "class",
+                          data =  undersampled_training_set,control=rpart.control(cp=0.001))
+
+# Plot the decision tree
+plot(tree_undersample,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_undersample)
+
+CAs mentioned in the video, you can also change the prior probabilities to obtain a decision tree. This is an indirect way of adjusting the importance of misclassifications for each class. You can specify another argument inside rpart() to include prior probabities. The argument you are looking for has the following form
+
+parms = list(prior=c(non_default_proportion, default_proportion))
+The rpart package is now already loaded in your workspace.
+
+Instructions
+Change the code provided such that a decision tree is constructed , including the argument parms and changing the proportion of non-defaults to 0.7, and of defaults to 0.3 (they should always sum up to 1). Additionally, include control = rpart.control(cp = 0.001) as well.
+Plot the decision tree using the function plot and the tree object name. Add a second argument "uniform=TRUE" to get equal-sized branches.
+Add labels to the tree using function text() and the decision tree object name.
+
+# Change the code below such that a tree is constructed with adjusted prior probabilities.
+tree_prior <- rpart(loan_status ~ ., method = "class",
+                    data = training_set,parms=list(prior=c(0.7,0.3)),control=rpart.control(cp=0.001))
+
+# Plot the decision tree
+plot(tree_prior,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_prior)
                
+
+
+
+
+
+
+Including a loss matrix
+100xp
+Thirdly, you can include a loss matrix, changing the relative importance of misclassifying a default as non-default versus a non-default as a default. You want to stress that misclassifying a default as a non-default should be penalized more heavily. Including a loss matrix can again be done in the argument parms in the loss matrix.
+
+parms = list(loss = matrix(c(0, cost_def_as_nondef, cost_nondef_as_def, 0), ncol=2))
+Doing this, you are constructing a 2x2-matrix with zeroes on the diagonal and changed loss penalties off-diagonal. The default loss matrix is all ones off-diagonal.
+
+Instructions
+Change the code provided such a loss matrix is included, with a penalization that is 10 times bigger when misclassifying an actual default as a non-default. This can be done replacing cost_def_as_nondef by 10, and cost_nondef_as_def by 1. Similar to what you've done in the previous exercises, include rpart.control to relax the complexity parameter to 0.001.
+Plot the decision tree using the function plot and the tree object name. Add a second argument uniform = TRUE to get equal-sized branches, and add labels to the tree using text() with the tree object name.
+
+# Change the code below such that a decision tree is constructed using a loss matrix penalizing 10 times more heavily for misclassified defaults.
+tree_loss_matrix <- rpart(loan_status ~ ., method = "class",
+                          data =  training_set,parms=list(loss=matrix(c(0,10,1,0),ncol=2)),control=rpart.control(cp=0.001))
+
+# Plot the decision tree
+plot(tree_loss_matrix,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_loss_matrix)
+
+
