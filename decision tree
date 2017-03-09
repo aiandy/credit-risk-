@@ -1,0 +1,319 @@
+Computing the gain for a tree
+100xp
+In the video, you looked at how the Gini-measure is used to create the perfect split for a tree. Now, you will compute the gain for the tree loaded in your workspace.
+
+The data set contains 500 cases, 89 of these cases are defaults. This led to a Gini of 0.292632 in the root node. As a small reminder, remember that Gini of a certain node = 2 * proportion of defaults in this node * proportion of non-defaults in this node. Have a look at the code for a refresher.
+
+gini_root <- 2 * (89 / 500) * (411 / 500)
+You will use these Gini measures to help you calculate the gain of the leaf nodes with respect to the root node. Look at the following code to get an idea of how you can use the gini measures you created to calculate the gain of a node.
+
+Gain = gini_root - (prop(cases left leaf) * gini_left) - (prop(cases right leaf * gini_right))
+Compute the gini in the left hand and the right hand node, and the gain of the two leaf nodes with respect to the root node. The object containing the tree is small_tree.
+
+Instructions
+The computation for the Gini of the root node is given.
+Compute the Gini measure for the left leaf node.
+Compute the Gini measure for the right leaf node.
+Compute the gain by taking the difference between the root node Gini and the weighted leaf node Gini measures.
+Information regarding the split in this tree can be found using $split and the tree object, small_tree. Instead of gain, you should look at the improve column here. improve is an alternative metric for gain, simply obtained by multiplying gain by the number of cases in the data set. Make sure that the object improve (code given) has the same value as in small_tree$split.
+
+
+# The Gini-measure of the root node is given below
+gini_root <- 2 * 89 / 500 * 411 / 500
+
+# Compute the Gini measure for the left leaf node
+gini_ll <-2*(401/446)*(45/446)
+
+# Compute the Gini measure for the right leaf node
+gini_rl <-2*(10/54)*(44/54)
+
+# Compute the gain
+gain <- gini_root - 446 / 500 * gini_ll - 54 / 500 * gini_rl
+
+
+
+Undersampling the training set
+100xp
+In the video, you saw that to overcome the unbalanced data problem, you can use under- or oversampling. The training set has been undersampled for you, such that 1/3 of the training set consists of defaults, and 2/3 of non-defaults. The resulting data set is available in your workspace and named undersampled_training_set, and contains less observations (6570 instead of 19394). In this exercise, you will create a decision tree using the undersampled data set.
+
+You will notice that the trees in this and the next exercises are very big, so big that you cannot really read them anymore. Don't worry about this for now, we will tell you how you can make them more manageable in the next video!
+
+Instructions
+The rpart package has been installed for you. Load the package in your workspace.
+Change the code provided such that a decision tree is constructed using the undersampled training set instead of training_set. Additionally, add the argument control = rpart.control(cp = 0.001). cp, which is the complexity parameter, is the threshold value for a decrease in overall lack of fit for any split. If cp is not met, further splits will no longer be pursued. cp's default value is 0.01, but for complex problems, it is advised to relax cp.
+Plot the decision tree using the function plot and the tree object name. Add a second argument uniform = TRUE to get equal-sized branches.
+The previous command simply creates a tree with some nodes and edges, but without any text (or so-called "labels") on it. Use function text() with sole argument tree_undersample to add labels.
+
+# Load package rpart in your workspace.
+library("rpart")
+
+# Change the code provided in the video such that a decision tree is constructed using the undersampled training set. Include rpart.control to relax the complexity parameter to 0.001.
+tree_undersample <- rpart(loan_status ~ ., method = "class",
+                          data =  undersampled_training_set,control=rpart.control(cp=0.001))
+
+# Plot the decision tree
+plot(tree_undersample,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_undersample)
+
+
+Changing the prior probabilities
+100xp
+As mentioned in the video, you can also change the prior probabilities to obtain a decision tree. This is an indirect way of adjusting the importance of misclassifications for each class. You can specify another argument inside rpart() to include prior probabities. The argument you are looking for has the following form
+
+parms = list(prior=c(non_default_proportion, default_proportion))
+The rpart package is now already loaded in your workspace.
+
+Instructions
+Change the code provided such that a decision tree is constructed , including the argument parms and changing the proportion of non-defaults to 0.7, and of defaults to 0.3 (they should always sum up to 1). Additionally, include control = rpart.control(cp = 0.001) as well.
+Plot the decision tree using the function plot and the tree object name. Add a second argument "uniform=TRUE" to get equal-sized branches.
+Add labels to the tree using function text() and the decision tree object name.
+
+# Change the code below such that a tree is constructed with adjusted prior probabilities.
+tree_prior <- rpart(loan_status ~ ., method = "class",
+                    data = training_set,parms=list(prior=c(0.7,0.3)),control=rpart.control(cp=0.001))
+
+# Plot the decision tree
+plot(tree_prior,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_prior)
+
+
+Including a loss matrix
+100xp
+Thirdly, you can include a loss matrix, changing the relative importance of misclassifying a default as non-default versus a non-default as a default. You want to stress that misclassifying a default as a non-default should be penalized more heavily. Including a loss matrix can again be done in the argument parms in the loss matrix.
+
+parms = list(loss = matrix(c(0, cost_def_as_nondef, cost_nondef_as_def, 0), ncol=2))
+Doing this, you are constructing a 2x2-matrix with zeroes on the diagonal and changed loss penalties off-diagonal. The default loss matrix is all ones off-diagonal.
+
+Instructions
+Change the code provided such a loss matrix is included, with a penalization that is 10 times bigger when misclassifying an actual default as a non-default. This can be done replacing cost_def_as_nondef by 10, and cost_nondef_as_def by 1. Similar to what you've done in the previous exercises, include rpart.control to relax the complexity parameter to 0.001.
+Plot the decision tree using the function plot and the tree object name. Add a second argument uniform = TRUE to get equal-sized branches, and add labels to the tree using text() with the tree object name.
+
+# Change the code below such that a decision tree is constructed using a loss matrix penalizing 10 times more heavily for misclassified defaults.
+tree_loss_matrix <- rpart(loan_status ~ ., method = "class",
+                          data =  training_set,parms=list(loss=matrix(c(0,10,1,0),ncol=2)),control=rpart.control(cp=0.001))
+
+
+# Plot the decision tree
+plot(tree_loss_matrix,uniform=TRUE)
+
+# Add labels to the decision tree
+text(tree_loss_matrix)
+
+
+Pruning the tree with changed prior probabilities
+0xp
+In the video, you have learned that pruning a tree is necessary to avoid overfitting. There were some big trees in the previous exercises and now you will put what you have learned into practice, and prune the previously constructed tree with the changed prior probabilities. The rpart package is already loaded in your workspace.
+
+You will first set a seed to make sure the results are reproducible as mentioned in the video, because you will be examining cross-validated error results. Results involve randomness and could differ slightly upon running the function again with a different seed.
+
+In this exercise you will learn to identify which complexity parameter (CP) will minimize the cross-validated error results, then prune your tree based on this value.
+
+Instructions
+tree_prior is loaded in your workspace.
+Use plotcp() to visualize cross-vaidated error (X-val Relative Error) in relation to the complexity parameter for tree_prior.
+Use printcp() to print a table of information about CP, splits, and errors. See if you can identify which split has the minimum cross-validated error in tree_prior.
+Use which.min() to identify which row in tree_prior$cptable has the minimum cross-validated error "xerror". Assign this to index.
+Create tree_min by selecting the index of tree_prior$cptable within the column "CP".
+Use the prune()-function to obtain the pruned tree. Call the pruned tree ptree_prior.
+Package rpart.plot is loaded in your workspace. Plot the pruned tree using function prp() (default setting).
+
+# tree_prior is loaded in your workspace
+
+# Plot the cross-validated error rate as a function of the complexity parameter
+plotcp(tree_prior)
+# tree_prior is loaded in your workspace
+
+# Plot the cross-validated error rate as a function of the complexity parameter
+plotcp(tree_prior)
+
+# Use printcp() to identify for which complexity parameter the cross-validated error rate is minimized
+printcp(tree_prior)
+
+# Create an index for of the row with the minimum xerror
+index <- which.min(tree_prior$cptable[, "xerror"])
+
+Pruning the tree with the loss matrix
+100xp
+In this exercise, you will prune the tree that was built using a loss matrix in order to penalize misclassified defaults more than misclassified non-defaults.
+
+Instructions
+Run the code to set a seed and construct tree_loss_matrix again.
+Use function plotcp() to examine the cross-validated error-structure.
+Looking at the cp-plot, you will notice that pruning the tree using the minimum cross-validated error will lead to a tree that is as big as the unpruned tree, as the cross-validated error reaches its minimum for cp = 0.001. Because you would like to make the tree somewhat smaller, try pruning the tree using cp = 0.0012788. For this complexity parameter, the cross-validated error approaches the minimum observed error. Call the pruned tree ptree_loss_matrix.
+Package rpart.plot is loaded in your workspace. Plot the pruned tree using function prp() (including argument extra = 1).
+
+# set a seed and run the code to construct the tree with the loss matrix again
+set.seed(345)
+tree_loss_matrix  <- rpart(loan_status ~ ., method = "class", data = training_set,
+                           parms = list(loss=matrix(c(0, 10, 1, 0), ncol = 2)),
+                           control = rpart.control(cp = 0.001))
+
+# Plot the cross-validated error rate as a function of the complexity parameter
+plotcp(tree_loss_matrix)
+
+# Prune the tree using cp = 0.0012788
+ptree_loss_matrix <- prune(tree_loss_matrix, cp = 0.0012788)
+
+# Use prp() and argument extra = 1 to plot the pruned tree
+prp(ptree_loss_matrix, extra = 1)
+
+One final tree using more options
+0xp
+In this exercise, you will use some final arguments that were discussed in the video. Some specifications in the rpart.control()-function will be changed, and some weigths will be included using the weights argument in rpart(). The vector case_weights has been constructed for you and is loaded in your workspace. This vector contains weights of 1 for the non-defaults in the training set, and weights of 3 for defaults in the training sets. By specifying higher weights for default, the model will assign higher importance to classifying defaults correctly.
+
+Instructions
+Set a seed of 345.
+Add to the provided code by passing case_weights to the weights argument of `rpart().
+Change the minimum number of splits that are allowed in a node to 5, and the minimum number of observations allowed in leaf nodes to 2 by using the arguments minsplit and minbucket in rpart.control respectively.
+Use function plotcp() to investigate where the cross-validated error rate can be minimized.
+Use which.min() to identify the row with the minimum "xerror" in tree_weights$cp. Assign this to index.
+Use the provided code to select the cp for which the crossvalidated error is minimized
+Prune the tree using the complexity parameter where the cross-validated error rate is minimized. Store the pruned tree in ptree_weights.
+Plot the pruned tree using function prp(). Include a second argument extra and set it equal to 1.
+
+
+# Create an index for of the row with the minimum xerror
+index <- which.min(tree_weights$cp[ , "xerror"])
+
+# Create tree_min
+tree_min <- tree_weights$cp[index, "CP"]
+
+# Prune the tree using tree_min
+ptree_weights<-prune(tree_weights,tree_min)
+
+# Plot the pruned tree using the rpart.plot()-package
+prp(ptree_weights,extra=1)
+
+
+Confusion matrices and accuracy of our final trees
+100xp
+Over the past few exercises, you have constructed quite a few pruned decision trees, with four in total. As you can see, the eventual number of splits varies quite a bit from one tree to another:
+
+ptree_undersample  # 7 splits
+ptree_prior  # 9 splits
+ptree_loss_matrix  # 24 splits
+ptree_weights  # 6 splits
+Now it is important to know which tree performs best in terms of accuracy. In order to get the accuracy, you will start off by making predictions using the test set, and construct the confusion matrix for each of these trees. You will add the argument type = "class" when doing these predictions. By doing this there is no need to set a cut-off.
+
+Nevertheless, it is important to be aware of the fact that not only the accuracy is important, but also the sensitivity and specificity. Additionally, predicting probabilities instead of binary values (0 or 1) has the advantage that the cut-off can be moved along. Then again, the difficulty here is the choice of the cut-off. You will return to this in the next chapter.
+
+In case you needed a reminder, here is how to compute the accuracy:
+Classification accuracy=(TP+TN)(TP+FP+TN+FN)
+Classification accuracy=(TP+TN)(TP+FP+TN+FN)
+Instructions
+Use predict() to make predictions for all four trees. The test_set should be included in the argument newdata. Don't forget to include type = "class"!
+Construct confusion matrices for each of these decision trees. Use the function table(), and include the "true"" status (using test_set$loan_status) first, followed by the prediction.
+Compute the accuracy using each of the confusion matrices.
+
+pred_undersample <- predict(ptree_undersample, newdata = test_set,  type = "class")
+pred_prior <- predict(ptree_prior, newdata = test_set, type = "class")
+pred_loss_matrix <- predict(ptree_loss_matrix, newdata = test_set, type = "class")
+pred_weights <- predict(ptree_weights, newdata = test_set, type = "class")
+
+# Construct confusion matrices using the predictions.
+confmat_undersample <- table(test_set$loan_status, pred_undersample)
+confmat_prior <- table(test_set$loan_status, pred_prior)
+confmat_loss_matrix <- table(test_set$loan_status, pred_loss_matrix)
+confmat_weights <- table(test_set$loan_status, pred_weights)
+
+# Compute the accuracies
+acc_undersample <- sum(diag(confmat_undersample)) / nrow(test_set)
+acc_prior <- sum(diag(confmat_prior)) / nrow(test_set)
+acc_loss_matrix <- sum(diag(confmat_loss_matrix)) / nrow(test_set)
+acc_weights <- sum(diag(confmat_weights)) / nrow(test_set)
+
+Computing a bad rate given a fixed acceptance rate
+0xp
+In the video, you learned how to compute the bad rate (or, the percentage of defaults) in the loan portfolio of a bank when given:
+
+a specific model
+the acceptance rate
+In this exercise, you will compute the bad rate that a bank can expect when using the pruned tree ptree_prior that you fitted before, and an acceptance rate of 80%. As a reminder, the tree is plotted on your right hand side.
+
+Instructions
+In the script, you are provided the code to make predictions for the probability of default using the pruned tree and test_set. Remember that if you use the predict() function for a tree, the probability of default can be found in the second column. Therefore [,2] was pasted to the predict() function.
+Obtain the cut-off that leads to an acceptance rate of 80%, using prob_default_prior. You can use the quantile()- function to do this, setting the second argument to 0.8. Assign the name cutoff_prior.
+The code to obtain the actual binary default predictions (0 or 1) is provided. ifelse() here. Name the object bin_pred_prior_80.
+The code to select the default indicators of test_set for the accepted loans acording to a 80% acceptance rate is provided.
+Compute the percentage of defaults (or the "bad rate") for the accepted loans. This is the number of occurences of 1 in accepted_status_prior_80, divided by the total number of instances in this vector. Print the solution to your R-console.
+# Make predictions for the probability of default using the pruned tree and the test set.
+prob_default_prior <- predict(ptree_prior, newdata = test_set)[ ,2]
+
+# Obtain the cutoff for acceptance rate 80%
+  cutoff_prior<-quantile(prob_default_prior,0.8)
+
+# Obtain the binary predictions.
+bin_pred_prior_80 <- ifelse(prob_default_prior > cutoff_prior, 1, 0)
+
+# Obtain the actual default status for the accepted loans
+accepted_status_prior_80 <- test_set$loan_status[bin_pred_prior_80 == 0]
+
+# Obtain the bad rate for the accepted loans
+sum(accepted_status_prior_80)/length(accepted_status_prior_80)
+
+
+The strategy table and strategy curve
+100xp
+Repeating the calculations you did in the previous exercise for several acceptance rates, you can obtain a strategy table. This table can be a useful tool for banks, as they can give them a better insight to define an acceptance strategy.
+
+You know how to compute a bad rate for a certain acceptance rate by now, so the function strategy_bank was written and loaded into your workspace to speed things up. This function computes the cut-off and bad rate for the acceptance rates that are multiples of 5% (0%, 5%, 10%, ...).
+
+Instructions
+Have a look at the function strategy_bank.
+The vector predictions_cloglog contains predicted probabilities of default using the cloglog model you used in chapter 2, the vector predictions_loss_matrixcontains the predicted probabilities of default using the pruned tree including a loss matrix (previously constructed in chapter 3). Apply function strategy_bank to each of the prediction-vectors, assign the name strategy_cloglog and strategy_loss_matrix respectively.
+The strategy tables can be obtained using the object names in combination with $table.
+The strategy curves have been plotted for you. The strategy curve of the tree model shows pretty strange behavior. Because of the structure of classification trees, you might have a bigger chance for weird "jumps" here. Additionally, the tree with a loss matrix was a very big one, so this might be the result of overfitting!
+
+strategy_bank
+function(prob_of_def){
+cutoff=rep(NA, 21)
+bad_rate=rep(NA, 21)
+accept_rate=seq(1,0,by=-0.05)
+for (i in 1:21){
+  cutoff[i]=quantile(prob_of_def,accept_rate[i])
+  pred_i=ifelse(prob_of_def> cutoff[i], 1, 0)
+  pred_as_good=test_set$loan_status[pred_i==0]
+  bad_rate[i]=sum(pred_as_good)/length(pred_as_good)}
+table=cbind(accept_rate,cutoff=round(cutoff,4),bad_rate=round(bad_rate,4))
+return(list(table=table,bad_rate=bad_rate, accept_rate=accept_rate, cutoff=cutoff))
+}
+
+
+The strategy table and strategy curve
+0xp
+Repeating the calculations you did in the previous exercise for several acceptance rates, you can obtain a strategy table. This table can be a useful tool for banks, as they can give them a better insight to define an acceptance strategy.
+
+You know how to compute a bad rate for a certain acceptance rate by now, so the function strategy_bank was written and loaded into your workspace to speed things up. This function computes the cut-off and bad rate for the acceptance rates that are multiples of 5% (0%, 5%, 10%, ...).
+
+Instructions
+Have a look at the function strategy_bank.
+The vector predictions_cloglog contains predicted probabilities of default using the cloglog model you used in chapter 2, the vector predictions_loss_matrixcontains the predicted probabilities of default using the pruned tree including a loss matrix (previously constructed in chapter 3). Apply function strategy_bank to each of the prediction-vectors, assign the name strategy_cloglog and strategy_loss_matrix respectively.
+The strategy tables can be obtained using the object names in combination with $table.
+The strategy curves have been plotted for you. The strategy curve of the tree model shows pretty strange behavior. Because of the structure of classification trees, you might have a bigger chance for weird "jumps" here. Additionally, the tree with a loss matrix was a very big one, so this might be the result of overfitting!
+
+# Have a look at the function strategy_bank
+strategy_bank
+
+# Apply the function strategy_bank to both predictions_cloglog and predictions_loss_matrix
+strategy_cloglog <- strategy_bank(predictions_cloglog)
+strategy_loss_matrix <- strategy_bank(predictions_loss_matrix)
+
+# Obtain the strategy tables for both prediction-vectors
+strategy_cloglog$table
+strategy_loss_matrix$table
+
+# Draw the strategy functions
+par(mfrow = c(1,2))
+plot(strategy_cloglog$accept_rate, strategy_cloglog$bad_rate, 
+     type = "l", xlab = "Acceptance rate", ylab = "Bad rate", 
+     lwd = 2, main = "logistic regression")
+
+plot(strategy_loss_matrix$accept_rate, strategy_loss_matrix$bad_rate, 
+     type = "l", xlab = "Acceptance rate", 
+     ylab = "Bad rate", lwd = 2, main = "tree")
+     
+     
